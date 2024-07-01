@@ -22,6 +22,7 @@ let isCanWebGL: boolean;
  * @return {null}
  */
 export default function (options?: VapConfig) {
+  // #vap 入口
   if (canWebGL()) {
     return new WebglRenderVap(options);
   } else {

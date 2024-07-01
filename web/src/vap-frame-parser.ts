@@ -34,6 +34,9 @@ export default class FrameParser {
     if (/\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]\.json/.test(this.config)) {
       this.config = await this.getConfigBySrc(this.config);
     }
+    // #canvas 将 text 转换为 canvas 并赋值给 img 字段。
+    // #canvas 将 image
+    // #canvas 获取字符或者图片资源，绑定到 this.config 上
     await this.parseSrc(this.config);
     this.frame = this.config.frame || [];
     return this;
@@ -86,14 +89,16 @@ export default class FrameParser {
             this.initCanvas();
             item.img = this.makeTextImg(item);
           } else if (item.srcType === 'img') {
+            // #canvas 获取图片地址。
             item.imgUrl =
               this.headData[item.srcTag] ||
+              // 正则匹配 key [key] 值。替换为 headData[key]。
               item.srcTag.replace(/\[(.*)\]/, ($0, $1) => {
                 return this.headData[$1];
               });
             try {
               item.img = await this.loadImg(item.imgUrl);
-            } catch (e) {}
+            } catch (e) { }
           }
           if (item.img) {
             src[item.srcId] = item;
@@ -102,6 +107,8 @@ export default class FrameParser {
       })
     ).then(() => {
       if (this.canvas) {
+        // todo 为什么要移除 canvas?
+        // 利用 canvas 生成图片资源后可以移除该 canvas
         this.canvas.parentNode.removeChild(this.canvas);
       }
     });
@@ -149,7 +156,9 @@ export default class FrameParser {
       return font.join(' ');
     };
     if (!fontStyle) {
+      // #canvas 设置字体 
       ctx.font = getFontStyle();
+      // #canvas 设置图形的填充颜色
       ctx.fillStyle = color;
     } else if (typeof fontStyle == 'string') {
       ctx.font = fontStyle;
@@ -162,9 +171,12 @@ export default class FrameParser {
       ctx.fillStyle = color;
       fontStyle.call(null, ctx, item);
     }
+    // #canvas 这个方法通过把像素设置为透明，以达到擦除一个矩形区域的效果。
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    // #canvas fillText(text, x, y [, maxWidth]) 在指定的 (x,y) 位置填充指定的文本，绘制的最大宽度是可选的。
     ctx.fillText(textStr, w / 2, h / 2);
     // console.log('frame : ' + textStr, ctx.canvas.toDataURL('image/png'))
+    // #canvas 获得像素数据: 
     return ctx.getImageData(0, 0, w, h);
   }
   getFrame(frame) {

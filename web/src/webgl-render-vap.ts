@@ -13,9 +13,9 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import * as glUtil from './gl-util';
 import { VapConfig } from './type';
 import VapFrameParser from './vap-frame-parser';
-import * as glUtil from './gl-util';
 import VapVideo from './video';
 
 const PER_SIZE = 9;
@@ -53,6 +53,7 @@ export default class WebglRenderVap extends VapVideo {
       return this;
     }
     if (options) {
+      // 创建了一个 video 元素，用于加载视频资源
       this.initVideo();
       // 重新解析
       this.vapFrameParser = new VapFrameParser(this.options.config, this.options);
@@ -62,6 +63,7 @@ export default class WebglRenderVap extends VapVideo {
           this.initWebGL();
           this.initTexture();
           this.initVideoTexture();
+          // #vap 设置视频播放的帧率
           this.options.fps = this.vapFrameParser.config.info.fps || 30;
           super.play();
         })
@@ -88,12 +90,17 @@ export default class WebglRenderVap extends VapVideo {
     canvas.height = height || h;
     this.container.appendChild(canvas);
 
+    // #webgl 总的来说，这段代码是在初始化WebGL渲染上下文的过程中，对渲染状态进行了一系列的配置，以确保后续的渲染操作能够按照预期执行。
     if (!gl) {
       gl = canvas.getContext('webgl') || (canvas.getContext('experimental-webgl') as WebGLRenderingContext);
+      // #webgl 接下来，gl.disable(gl.BLEND)禁用了WebGL的混合功能。混合是一种图形渲染技术，用于确定一个像素的最终颜色，这是通过将源像素颜色与目标像素颜色按照某种方式组合来实现的。在这种情况下，代码显式地禁用了混合，这可能是因为在特定的渲染步骤中不需要混合效果，或者为了提高性能。
       gl.disable(gl.BLEND);
+      // #webgl gl.blendFuncSeparate方法设置了混合函数，这是在混合被启用时使用的。尽管在前一步中混合被禁用了，但这可能是为了在后续操作中快速启用和配置混合。这个方法允许分别为RGB颜色和alpha（透明度）通道指定混合因子。在这个例子中，对于颜色和alpha通道，源因子被设置为gl.SRC_ALPHA（源颜色的alpha值），目标因子被设置为gl.ONE_MINUS_SRC_ALPHA（1减去源颜色的alpha值）。这是一种常见的设置，用于实现正常的alpha混合，即根据透明度来混合颜色。
       gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      // #webgl gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)调用改变了纹理图像的y轴方向。默认情况下，WebGL中的纹理图像在y轴上是反转的，因为WebGL的坐标系统与大多数图像格式的坐标系统不同。通过设置UNPACK_FLIP_Y_WEBGL为true，上传到WebGL的任何图像都会在y轴上翻转，这样可以确保图像以预期的方式显示。 
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     }
+    // #webgl gl.viewport(0, 0, canvas.width, canvas.height)设置了视口的大小。视口是一个矩形区域，用于将裁剪空间映射到屏幕空间，以便在屏幕上显示渲染的图形。在这种情况下，视口的大小被设置为canvas元素的大小，这确保了渲染的内容会占据整个
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     if (!vertexShader) {
